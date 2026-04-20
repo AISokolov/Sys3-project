@@ -1,0 +1,43 @@
+.top-button {
+  border: 1px solid #0077cc;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.top-button:hover {
+  transform: translateY(-1px);
+}
+
+.top-button--default {
+  background: transparent;
+  color: #0077cc;
+}
+
+.top-button--default:hover {
+  background: #0077cc;
+  color: #ffffff;
+}
+
+.top-button--primary {
+  background: #0077cc;
+  color: #ffffff;
+}
+
+.top-button--primary:hover {
+  background: #005fa3;
+}
+
+.top-button--danger {
+  background: transparent;
+  border-color: #d94b61;
+  color: #d94b61;
+}
+
+.top-button--danger:hover {
+  background: #d94b61;
+  color: #ffffff;
+}

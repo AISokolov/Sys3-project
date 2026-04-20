@@ -1,0 +1,75 @@
+.payment-page__layout {
+  display: grid;
+  grid-template-columns: 0.92fr 1.08fr;
+  gap: 24px;
+}
+
+.payment-page__summary,
+.payment-page__form {
+  padding: 28px;
+}
+
+.payment-page__service-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 22px;
+  background: #f4faff;
+  margin-bottom: 18px;
+}
+
+.payment-page__service-name {
+  margin: 0;
+  color: #004d99;
+  font-size: 1.5rem;
+}
+
+.payment-page__service-copy {
+  margin: 12px 0 0;
+  color: #44627f;
+  line-height: 1.6;
+}
+
+.payment-page__price {
+  margin: 18px 0 0;
+  color: #11385f;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.payment-page__saved {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #eff7ff;
+}
+
+.payment-page__saved p {
+  margin: 0 0 12px;
+  color: #44627f;
+}
+
+.payment-page__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #44627f;
+  font-weight: 500;
+}
+
+.payment-page__checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.payment-page__form-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .payment-page__layout {
+    grid-template-columns: 1fr;
+  }
+}
