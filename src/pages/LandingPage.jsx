@@ -7,7 +7,6 @@ import FormField from '../components/FormField/FormField';
 import Modal from '../components/Modal/Modal';
 import ServiceCard from '../components/ServiceCard/ServiceCard';
 import TopButton from '../components/TopButton/TopButton';
-import { useAppContext } from '../context/AppContext';
 import cashLogo from '../assets/images/cash.png';
 import securityLogo from '../assets/images/cyber-security.png';
 import meetingLogo from '../assets/images/meeting.png';
@@ -49,12 +48,12 @@ const features = [
 
 function LandingPage() {
   const navigate = useNavigate();
-  const { login, signUp, services, isAuthenticated } = useAppContext();
   const [optionIndex, setOptionIndex] = useState(0);
   const [activeModal, setActiveModal] = useState(null);
   const [loginValues, setLoginValues] = useState({ username: '', password: '' });
   const [signUpValues, setSignUpValues] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [services, setServices] = useState([]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -65,10 +64,86 @@ function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/main');
+    async function loadServices() {
+      try {
+        const response = await fetch('http://localhost:3001/services');
+        if (!response.ok) {
+          throw new Error('Failed to fetch services.');
+        }
+        const backendServices = await response.json();
+        setServices(backendServices);
+      } catch (fetchError) {
+        console.error('Failed to load services:', fetchError);
+        setServices([]);
+      }
     }
-  }, [isAuthenticated, navigate]);
+
+    loadServices();
+  }, []);
+
+  async function handleLogin() {
+    if (!loginValues.username.trim() || !loginValues.password.trim()) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: loginValues.username,
+          password: loginValues.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed.');
+      }
+
+      closeModal();
+      navigate('/main');
+    } catch (error) {
+      setError(error.message || 'Could not connect to the server.');
+    }
+  }
+
+  async function handleSignUp() {
+    if (!signUpValues.username.trim() || !signUpValues.email.trim() || !signUpValues.password.trim()) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: signUpValues.username,
+          email: signUpValues.email,
+          password: signUpValues.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed.');
+      }
+
+      closeModal();
+      navigate('/main');
+    } catch (error) {
+      setError(error.message || 'Could not connect to the server.');
+    }
+  }
+
 
   const openModal = (type) => {
     setError('');
@@ -79,31 +154,6 @@ function LandingPage() {
     setError('');
     setActiveModal(null);
   };
-
-  const handleLogin = () => {
-    const result = login(loginValues);
-
-    if (!result.success) {
-      setError(result.message);
-      return;
-    }
-
-    closeModal();
-    navigate('/main');
-  };
-
-  const handleSignUp = () => {
-    const result = signUp(signUpValues);
-
-    if (!result.success) {
-      setError(result.message);
-      return;
-    }
-
-    closeModal();
-    navigate('/main');
-  };
-
   return (
     <div className="landing-page">
       <AppHeader
@@ -114,13 +164,12 @@ function LandingPage() {
       <div className="app-container page-content">
         <section className="landing-hero">
           <div className="landing-hero__copy section-card">
-            <span className="landing-hero__pill">Frontend prototype mode</span>
+            <span className="landing-hero__pill">Share subscriptions together</span>
             <h2 className="landing-hero__headline">
               Share your subscription expenses with <span className="landing-hero__accent">{rotatingOptions[optionIndex]}</span>
             </h2>
             <p className="landing-hero__text">
-              Keep the current visual style, simplify the structure, and click through the whole app while the backend is
-              temporarily out of the picture.
+              Find a service, create your account, and start organizing shared subscription costs in one place.
             </p>
             <div>
               <TopButton variant="primary" onClick={() => openModal('signup')}>
@@ -146,7 +195,7 @@ function LandingPage() {
         </section>
 
         <section className="landing-features section-card">
-          <h2>Why this flow still works without the backend</h2>
+          <h2>Why Split Helps</h2>
           <div className="landing-features__grid">
             {features.map((feature) => (
               <FeatureCard
@@ -167,7 +216,7 @@ function LandingPage() {
           footer={<TopButton variant="primary" onClick={handleLogin}>Continue</TopButton>}
         >
           <div className="modal-form">
-            <p className="modal-form__message">Use any username and password to move through the frontend flow.</p>
+            <p className="modal-form__message">Sign in to continue to your subscriptions.</p>
             <FormField label="Username">
               <input
                 value={loginValues.username}
@@ -195,7 +244,7 @@ function LandingPage() {
           footer={<TopButton variant="primary" onClick={handleSignUp}>Create Account</TopButton>}
         >
           <div className="modal-form">
-            <p className="modal-form__message">This keeps the same idea as registration, but it now behaves like a centered modal.</p>
+            <p className="modal-form__message">Create your account to get started.</p>
             <FormField label="Username">
               <input
                 value={signUpValues.username}
