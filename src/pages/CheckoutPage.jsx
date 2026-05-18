@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './PaymentPage.css';
+import './CheckoutPage.css';
 import AppHeader from '../components/AppHeader/AppHeader';
 import TopButton from '../components/TopButton/TopButton';
 

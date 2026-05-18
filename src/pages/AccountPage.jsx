@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './ProfilePage.css';
+import './AccountPage.css';
 import AppHeader from '../components/AppHeader/AppHeader';
 import TopButton from '../components/TopButton/TopButton';
 

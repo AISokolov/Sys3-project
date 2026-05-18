@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './RootPage.css';
+import './LandingPage.css';
 import AppHeader from '../components/AppHeader/AppHeader';
 import FeatureCard from '../components/FeatureCard/FeatureCard';
 import FormField from '../components/FormField/FormField';
@@ -73,7 +73,6 @@ function LandingPage() {
         const backendServices = await response.json();
         setServices(backendServices);
       } catch (fetchError) {
-        console.error('Failed to load services:', fetchError);
         setServices([]);
       }
     }

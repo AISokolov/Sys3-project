@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllServices } = require('../services/servicesService');
+const { addService, getAllServices } = require('../services/servicesService');
 
 const services = express.Router();
 
@@ -9,6 +9,19 @@ services.get('/', async (req, res) => {
     res.json(services);
   } catch (error) {
     res.status(500).json({ message: 'Failed to load services.' });
+  }
+});
+
+services.post('/', async (req, res) => {
+  const { name, description, icon, cost } = req.body;
+  if (!name || !cost) {
+    return res.status(400).json({ message: 'Name and cost are required.' });
+  }
+  try {
+    const newService = await addService(name, description || null, icon, cost);
+    res.status(201).json(newService);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add service.' });
   }
 });
 

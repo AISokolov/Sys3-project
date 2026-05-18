@@ -23,6 +23,24 @@ async function getAllServices() {
   }));
 }
 
+async function addService(name, description, icon, cost) {
+  const imageBuffer = icon ? Buffer.from(icon, 'base64') : null;
+
+  const [result] = await db.query(`
+    INSERT INTO subscription_type_list (service_name, description, icon_image, cost)
+    VALUES (?, ?, ?, ?)
+  `, [name, description, imageBuffer, cost]);
+
+  return {
+    id: result.insertId,
+    name,
+    description,
+    cost: Number(cost),
+    image: icon ? `data:image/png;base64,${icon}` : null,
+  };
+}
+
 module.exports = {
+  addService,
   getAllServices,
 };

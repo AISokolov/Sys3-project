@@ -17,6 +17,7 @@ async function authUser(username, password) {
 }
 
 async function registerUser(username, email, password) {
+    // check if user with the same username or email already exists
     const [existingUser] = await db.query(
         `
     SELECT u_id
