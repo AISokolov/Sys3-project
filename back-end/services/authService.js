@@ -13,7 +13,12 @@ async function authUser(username, password) {
     if (rows.length === 0 || rows[0].password !== password) {
         return null; // User not found or incorrect password
     }
-    return rows[0];
+
+    return {
+        id: rows[0].u_id,
+        username: rows[0].user_name,
+        email: rows[0].email,
+    };
 }
 
 async function registerUser(username, email, password) {
@@ -28,7 +33,7 @@ async function registerUser(username, email, password) {
         [username, email]
     );
     if (existingUser.length > 0) {
-        throw new Error('The user with this username or email already exists');
+        return null;
     }
     const [result] = await db.query(
         `
@@ -38,10 +43,10 @@ async function registerUser(username, email, password) {
         [username, email, password]
     );
     return {
-        u_id: result.insertId,
-        user_name: username,
-        email: email
-    }
+        id: result.insertId,
+        username,
+        email,
+    };
 }
 
 module.exports = {

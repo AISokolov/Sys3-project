@@ -92,6 +92,7 @@ function LandingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           username: loginValues.username,
           password: loginValues.password,
@@ -123,6 +124,7 @@ function LandingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           username: signUpValues.username,
           email: signUpValues.email,
