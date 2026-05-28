@@ -13,6 +13,14 @@ function SubscriptionsPage() {
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [groupMode, setGroupMode] = useState('');
+  const [groupName, setGroupName] = useState('');
+  const [availableGroups, setAvailableGroups] = useState([]);
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [groupMessage, setGroupMessage] = useState('');
+  const [groupError, setGroupError] = useState('');
+  const [isGroupSaving, setIsGroupSaving] = useState(false);
+  const [isGroupsLoading, setIsGroupsLoading] = useState(false);
   const [formValues, setFormValues] = useState({
     name: '',
     cost: '',
@@ -40,6 +48,42 @@ function SubscriptionsPage() {
 
     fetchServices();
   }, []);
+
+  function closeServiceModal() {
+    setSelectedService(null);
+    setGroupMode('');
+    setGroupName('');
+    setAvailableGroups([]);
+    setSelectedGroupId('');
+    setGroupMessage('');
+    setGroupError('');
+    setIsGroupSaving(false);
+    setIsGroupsLoading(false);
+  }
+
+  function openServiceModal(service) {
+    setSelectedService(service);
+    showJoinGroups(service);
+  }
+
+  function openCreateGroupForm() {
+    setGroupMode('create');
+    setSelectedGroupId('');
+    setGroupError('');
+    setGroupMessage('');
+  }
+
+  function getGroupMemberCount(group) {
+    return group.memberCount || group.membersCount || group.currentMembers || 0;
+  }
+
+  function getGroupCapacity(group) {
+    return group.capacity || 4;
+  }
+
+  function canJoinGroup(group) {
+    return getGroupMemberCount(group) < getGroupCapacity(group) && !group.currentUserJoined;
+  }
 
   function handleFileChange(event) {
     const file = event.target.files[0];
@@ -97,6 +141,103 @@ function SubscriptionsPage() {
     }
   }
 
+  async function handleCreateGroup() {
+    if (!selectedService || !groupName.trim()) {
+      setGroupError('Please write a group name.');
+      return;
+    }
+
+    try {
+      setIsGroupSaving(true);
+      setGroupError('');
+      setGroupMessage('');
+
+      const response = await fetch('http://localhost:3001/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: groupName,
+          typeId: selectedService.id,
+        }),
+      });
+
+      if (response.status === 401) {
+        navigate('/');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to create group.');
+      }
+
+      setGroupMessage('Group created. You can now see it in your profile.');
+      setTimeout(() => navigate('/profile'), 700);
+    } catch (error) {
+      setGroupError('Could not create group yet. Check if POST /groups exists in the backend.');
+    } finally {
+      setIsGroupSaving(false);
+    }
+  }
+
+  async function showJoinGroups(service) {
+    const serviceToLoad = service || selectedService;
+
+    if (!serviceToLoad) return;
+
+    try {
+      setGroupMode('join');
+      setGroupError('');
+      setGroupMessage('');
+      setSelectedGroupId('');
+      setIsGroupsLoading(true);
+
+      const response = await fetch(`http://localhost:3001/groups/service/${serviceToLoad.id}`, {
+        credentials: 'include',
+      });
+
+      if (response.status === 401) {
+        navigate('/');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to load groups.');
+      }
+
+      const data = await response.json();
+      setAvailableGroups(data);
+    } catch (error) {
+      setAvailableGroups([]);
+      setGroupError('Could not load groups yet. Check if GET /groups/service/:typeId exists in the backend.');
+    } finally {
+      setIsGroupsLoading(false);
+    }
+  }
+
+  async function handleJoinGroup(groupId) {
+    const groupIdToJoin = groupId || selectedGroupId;
+    const selectedGroup = availableGroups.find((group) => String(group.id) === String(groupIdToJoin));
+
+    if (!groupIdToJoin) {
+      setGroupError('Please choose a group.');
+      return;
+    }
+
+    navigate('/payment', {
+      state: {
+        paymentAction: 'join',
+        groupId: groupIdToJoin,
+        groupName: selectedGroup ? selectedGroup.name : '',
+        serviceName: selectedService.name,
+        serviceCost: selectedService.cost,
+        serviceImage: selectedService.image,
+      },
+    });
+  }
+
   return (
     <div>
       <AppHeader
@@ -132,7 +273,7 @@ function SubscriptionsPage() {
                   title={service.name}
                   price={Number(service.cost)}
                   image={service.image}
-                  onClick={() => setSelectedService(service)}
+                  onClick={() => openServiceModal(service)}
                 />
               ))}
             </div>
@@ -143,13 +284,10 @@ function SubscriptionsPage() {
       {selectedService && (
         <Modal
           title={selectedService.name}
-          onClose={() => setSelectedService(null)}
+          onClose={closeServiceModal}
           footer={
             <div className="service-modal__actions">
-              <TopButton onClick={() => setSelectedService(null)}>Close</TopButton>
-              <TopButton variant="primary" onClick={() => navigate('/payment')}>
-                Continue
-              </TopButton>
+              <TopButton onClick={closeServiceModal}>Close</TopButton>
             </div>
           }
         >
@@ -160,6 +298,87 @@ function SubscriptionsPage() {
             <p className="service-modal__description">{selectedService.description}</p>
           ) : null}
           <p className="service-modal__price">EUR {selectedService.cost} per month</p>
+
+          <div className="group-choice">
+            <h3>What do you want to do?</h3>
+            <div className="group-choice__buttons">
+              <TopButton variant={groupMode === 'create' ? 'primary' : 'default'} onClick={openCreateGroupForm}>
+                Create New Group
+              </TopButton>
+              <TopButton variant={groupMode === 'join' ? 'primary' : 'default'} onClick={() => showJoinGroups(selectedService)}>
+                Join Existing Group
+              </TopButton>
+            </div>
+          </div>
+
+          {groupMode === 'create' ? (
+            <div className="group-form">
+              <FormField label="Group name" hint="Example: Netflix roommates or Spotify family">
+                <input
+                  value={groupName}
+                  onChange={(event) => setGroupName(event.target.value)}
+                  placeholder="My subscription group"
+                />
+              </FormField>
+              <TopButton variant="primary" onClick={handleCreateGroup} disabled={isGroupSaving}>
+                {isGroupSaving ? 'Creating...' : 'Create Group'}
+              </TopButton>
+            </div>
+          ) : null}
+
+          {groupMode === 'join' ? (
+            <div className="group-form">
+              <h4 className="group-form__title">Groups for {selectedService.name}</h4>
+              {isGroupsLoading ? <p className="group-form__text">Loading groups...</p> : null}
+              {!isGroupsLoading && availableGroups.length === 0 ? (
+                <p className="group-form__text">No open groups for this service yet. You can create a new one.</p>
+              ) : null}
+              {!isGroupsLoading && availableGroups.length > 0 ? (
+                <div className="group-list">
+                  {availableGroups.map((group) => {
+                    const memberCount = getGroupMemberCount(group);
+                    const capacity = getGroupCapacity(group);
+                    const isFull = memberCount >= capacity;
+                    const isAlreadyJoined = group.currentUserJoined;
+                    const canJoin = canJoinGroup(group);
+
+                    return (
+                      <button
+                        type="button"
+                        className={`group-list__item ${selectedGroupId === String(group.id) ? 'group-list__item--selected' : ''}`}
+                        key={group.id}
+                        onClick={() => setSelectedGroupId(String(group.id))}
+                        disabled={!canJoin}
+                      >
+                        <span>
+                          <strong>{group.name}</strong>
+                          <small>
+                            {isAlreadyJoined ? 'You are already in this group' : isFull ? 'Full group' : 'Available to join'}
+                          </small>
+                        </span>
+                        <span className="group-list__capacity">
+                          {memberCount}/{capacity}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {!isGroupsLoading && availableGroups.some(canJoinGroup) ? (
+                <TopButton variant="primary" onClick={() => handleJoinGroup(selectedGroupId)} disabled={isGroupSaving || !selectedGroupId}>
+                  {isGroupSaving ? 'Joining...' : 'Join Group'}
+                </TopButton>
+              ) : null}
+              {!isGroupsLoading && !availableGroups.some(canJoinGroup) ? (
+                <TopButton variant="primary" onClick={openCreateGroupForm}>
+                  Create New Group
+                </TopButton>
+              ) : null}
+            </div>
+          ) : null}
+
+          {groupMessage ? <p className="group-message group-message--success">{groupMessage}</p> : null}
+          {groupError ? <p className="group-message group-message--error">{groupError}</p> : null}
         </Modal>
       )}
 

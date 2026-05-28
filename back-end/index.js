@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const servicesRoutes = require('./routes/services');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
+const groupRoutes = require('./routes/group');
+const paymentRoutes = require('./routes/payment');
 const session = require('express-session')
 
 dotenv.config();
@@ -32,6 +34,8 @@ app.use(express.json());
 app.use('/services', servicesRoutes);
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
+app.use('/groups', groupRoutes);
+app.use('/payments', paymentRoutes);
 
 app.listen(process.env.PORT || 3001, () => {
     console.log(`Backend server is running on port ${process.env.PORT || 3001}`);

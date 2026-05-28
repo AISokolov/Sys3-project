@@ -37,6 +37,18 @@
   font-weight: 700;
 }
 
+.payment-page__form-title {
+  margin: 0;
+  color: #004d99;
+  font-size: 1.3rem;
+}
+
+.payment-page__error {
+  margin: 0;
+  color: #b42318;
+  font-weight: 700;
+}
+
 .payment-page__saved {
   margin-top: 20px;
   padding: 16px;
@@ -47,6 +59,22 @@
 .payment-page__saved p {
   margin: 0 0 12px;
   color: #44627f;
+}
+
+.payment-page__radio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #bfd9f5;
+  border-radius: 14px;
+  color: #11385f;
+  font-weight: 700;
+}
+
+.payment-page__radio input {
+  width: 18px;
+  height: 18px;
 }
 
 .payment-page__checkbox {

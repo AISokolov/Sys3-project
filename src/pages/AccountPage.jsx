@@ -208,7 +208,8 @@ function AccountPage() {
           title={managedService.name}
           onClose={() => setManagedService(null)}
           footer={
-            <>
+            <div className="profile-modal__footer">
+              <p>Leaving removes you from this group subscription.</p>
               <TopButton
                 variant="danger"
                 onClick={async () => {
@@ -217,13 +218,39 @@ function AccountPage() {
               >
                 Unsubscribe
               </TopButton>
-            </>
+            </div>
           }
         >
           <div className="modal-service-details">
-            <p>{managedService.description}</p>
-            <p>EUR {managedService.cost.toFixed(2)} per month</p>
-            <p>Next billing date: {new Date(managedService.billingDate).toLocaleDateString()}</p>
+            <div className="profile-modal__hero">
+              <div className="profile-modal__image-wrap">
+                {managedService.image ? (
+                  <img src={managedService.image} alt="" />
+                ) : (
+                  <span>{managedService.name.charAt(0)}</span>
+                )}
+              </div>
+              <div>
+                <p className="profile-modal__eyebrow">Active subscription</p>
+                <h3>{managedService.name}</h3>
+                <p>{managedService.description || 'No description added yet.'}</p>
+              </div>
+            </div>
+
+            <div className="profile-modal__stats">
+              <div>
+                <span>Monthly cost</span>
+                <strong>EUR {managedService.cost.toFixed(2)}</strong>
+              </div>
+              <div>
+                <span>Next billing</span>
+                <strong>{new Date(managedService.billingDate).toLocaleDateString()}</strong>
+              </div>
+              <div>
+                <span>Group</span>
+                <strong>{managedService.groupName || 'Shared group'}</strong>
+              </div>
+            </div>
           </div>
         </Modal>
       )}

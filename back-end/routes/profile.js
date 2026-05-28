@@ -55,11 +55,14 @@ profile.delete('/subscriptions/:subId', async (req, res) => {
     const subId = req.params.subId
 
     try {
-        const subOnDelete = await unsubscribe(id, subId)
-        if (!subOnDelete) {
+        const unsubscribeResult = await unsubscribe(id, subId)
+        if (!unsubscribeResult) {
             return res.status(404).json({ message: 'Subscription not found' });
         }
-        return res.json({ message: 'Subscription deleted' })
+        return res.json({
+            message: 'Unsubscribed successfully',
+            groupDeleted: unsubscribeResult.groupDeleted,
+        })
     } catch (error) {
         return res.status(500).json({ message: 'Failed to unsubscribe' });
     }
