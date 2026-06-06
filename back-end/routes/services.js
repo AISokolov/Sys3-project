@@ -3,6 +3,7 @@ const { addService, getAllServices } = require('../services/servicesService');
 
 const services = express.Router();
 
+// Get all available subscription services
 services.get('/', async (req, res) => {
   try {
     const services = await getAllServices();
@@ -12,6 +13,7 @@ services.get('/', async (req, res) => {
   }
 });
 
+// Add a new subscription service
 services.post('/', async (req, res) => {
   const { name, description, icon, cost } = req.body;
   if (!name || !cost) {

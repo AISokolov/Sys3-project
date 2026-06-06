@@ -3,12 +3,13 @@ const { getPaymentMethods, savePaymentMethod } = require('../services/paymentSer
 
 const payment = express.Router();
 
+// Get all payment methods for the current user
 payment.get('/methods', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const userId = req.session.user.id || req.session.user.u_id;
+    const userId = req.session.user.u_id;
 
     try {
         const methods = await getPaymentMethods(userId);
@@ -17,13 +18,13 @@ payment.get('/methods', async (req, res) => {
         return res.status(500).json({ message: 'Failed to load payment methods' });
     }
 });
-
+// Save a new payment method for the current user
 payment.post('/methods', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const userId = req.session.user.id || req.session.user.u_id;
+    const userId = req.session.user.u_id;
     const { cardHolder, cardNumber, expirationDate } = req.body;
 
     try {

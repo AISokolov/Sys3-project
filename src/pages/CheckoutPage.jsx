@@ -6,6 +6,10 @@ import TopButton from '../components/TopButton/TopButton';
 import FormField from '../components/FormField/FormField';
 
 function CheckoutPage() {
+  const baseIp = import.meta.env.VITE_BASE_IP;
+  const port = import.meta.env.VITE_BACKEND_PORT;
+  const apiUrl = `http://${baseIp}:${port}`;
+
   const navigate = useNavigate();
   const location = useLocation();
   const paymentData = location.state;
@@ -21,7 +25,7 @@ function CheckoutPage() {
   useEffect(() => {
     async function loadSavedCards() {
       try {
-        const response = await fetch('http://localhost:3001/payments/methods', {
+        const response = await fetch(`${apiUrl}/payments/methods`, {
           credentials: 'include',
         });
 
@@ -48,12 +52,12 @@ function CheckoutPage() {
     return selectedCardId !== 'new';
   }
 
-  async function saveCardIfNeeded() {
+  async function saveCard() {
     if (isUsingSavedCard() || !rememberCard) {
       return;
     }
 
-    const response = await fetch('http://localhost:3001/payments/methods', {
+    const response = await fetch(`${apiUrl}/payments/methods`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,9 +93,9 @@ function CheckoutPage() {
     return true;
   }
 
-  async function payAndJoinGroup() {
-    if (!paymentData || paymentData.paymentAction !== 'join') {
-      setError('Payment data is missing. Please choose a group again.');
+  async function payAndFinish() {
+    if (!paymentData) {
+      setError('Payment data is missing. Please choose a service again.');
       return;
     }
 
@@ -103,9 +107,13 @@ function CheckoutPage() {
       setIsPaying(true);
       setError('');
 
-      await saveCardIfNeeded();
+      await saveCard();
 
-      const response = await fetch(`http://localhost:3001/groups/${paymentData.groupId}/join`, {
+      const paymentUrl = paymentData.paymentAction === 'renew'
+        ? `${apiUrl}/profile/subscriptions/${paymentData.subId}/pay`
+        : `${apiUrl}/groups/${paymentData.groupId}/join`;
+
+      const response = await fetch(paymentUrl, {
         method: 'POST',
         credentials: 'include',
       });
@@ -116,7 +124,7 @@ function CheckoutPage() {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to join group.');
+        throw new Error('Failed to finish payment.');
       }
 
       navigate('/profile');
@@ -169,7 +177,9 @@ function CheckoutPage() {
             ) : null}
             <h2 className="payment-page__service-name">{paymentData.serviceName}</h2>
             <p className="payment-page__service-copy">
-              You are joining to the group: {paymentData.groupName || 'this group'}.
+              {paymentData.paymentAction === 'renew'
+                ? `You are renewing your payment for ${paymentData.groupName || 'this group'}.`
+                : `You are joining to the group: ${paymentData.groupName || 'this group'}.`}
             </p>
             <p className="payment-page__price">EUR {Number(paymentData.serviceCost).toFixed(2)} per month</p>
           </article>
@@ -242,8 +252,8 @@ function CheckoutPage() {
               ) : null}
 
               {error ? <p className="payment-page__error">{error}</p> : null}
-              <TopButton variant="primary" onClick={payAndJoinGroup} disabled={isPaying}>
-                {isPaying ? 'Processing...' : 'Pay and Join Group'}
+              <TopButton variant="primary" onClick={payAndFinish} disabled={isPaying}>
+                {isPaying ? 'Processing...' : paymentData.paymentAction === 'renew' ? 'Pay Renewal' : 'Pay and Join Group'}
               </TopButton>
             </div>
           </article>

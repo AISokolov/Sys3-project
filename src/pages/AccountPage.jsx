@@ -7,6 +7,10 @@ import FormField from '../components/FormField/FormField';
 import Modal from '../components/Modal/Modal';
 
 function AccountPage() {
+  const baseIp = import.meta.env.VITE_BASE_IP;
+  const port = import.meta.env.VITE_BACKEND_PORT;
+  const apiUrl = `http://${baseIp}:${port}`;
+
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,10 +22,19 @@ function AccountPage() {
   const [subscriptionDetails, setSubscriptionDetails] = useState([]);
   const [managedService, setManagedService] = useState(null);
 
+  function formatDate(dateValue) {
+    const date = new Date(dateValue);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch('http://localhost:3001/profile', {
+        const response = await fetch(`${apiUrl}/profile`, {
           credentials: 'include',
         });
 
@@ -36,8 +49,8 @@ function AccountPage() {
 
         const data = await response.json();
         const loadedProfile = {
-          id: data.id || data.u_id,
-          username: data.username || data.user_name || '',
+          id: data.u_id,
+          username: data.user_name || '',
           email: data.email || '',
         };
 
@@ -57,7 +70,7 @@ function AccountPage() {
 
   async function handleLogout() {
     try {
-      const response = await fetch('http://localhost:3001/auth/logout', {
+      const response = await fetch(`${apiUrl}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -77,7 +90,7 @@ function AccountPage() {
       setError('');
       setMessage('');
 
-      const response = await fetch('http://localhost:3001/profile', {
+      const response = await fetch(`${apiUrl}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,8 +108,14 @@ function AccountPage() {
       }
 
       const updatedProfile = await response.json();
-      setProfile(updatedProfile);
-      setUsername(updatedProfile.username || '');
+      const cleanProfile = {
+        id: updatedProfile.u_id,
+        username: updatedProfile.user_name || '',
+        email: updatedProfile.email || '',
+      };
+
+      setProfile(cleanProfile);
+      setUsername(cleanProfile.username);
       setEmail(updatedProfile.email || '');
       setPassword('');
       setMessage('Profile updated successfully.');
@@ -107,7 +126,7 @@ function AccountPage() {
 
   async function getSubscriptionDetails() {
     try {
-      const response = await fetch('http://localhost:3001/profile/subscriptions', {
+      const response = await fetch(`${apiUrl}/profile/subscriptions`, {
         credentials: 'include',
       });
 
@@ -124,7 +143,7 @@ function AccountPage() {
 
   async function unsubscribe(subId) {
     try {
-      const response = await fetch(`http://localhost:3001/profile/subscriptions/${subId}`, {
+      const response = await fetch(`${apiUrl}/profile/subscriptions/${subId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -209,7 +228,21 @@ function AccountPage() {
           onClose={() => setManagedService(null)}
           footer={
             <div className="profile-modal__footer">
-              <p>Leaving removes you from this group subscription.</p>
+              <TopButton
+                variant="primary"
+                onClick={() => navigate('/payment', {
+                  state: {
+                    paymentAction: 'renew',
+                    subId: managedService.id,
+                    groupName: managedService.groupName,
+                    serviceName: managedService.name,
+                    serviceCost: managedService.cost,
+                    serviceImage: managedService.image,
+                  },
+                })}
+              >
+                Pay next month
+              </TopButton>
               <TopButton
                 variant="danger"
                 onClick={async () => {
@@ -244,12 +277,19 @@ function AccountPage() {
               </div>
               <div>
                 <span>Next billing</span>
-                <strong>{new Date(managedService.billingDate).toLocaleDateString()}</strong>
+                <strong>{formatDate(managedService.nextBillingDate)}</strong>
               </div>
               <div>
                 <span>Group</span>
                 <strong>{managedService.groupName || 'Shared group'}</strong>
               </div>
+            </div>
+
+            <div className="profile-modal__link-card">
+              <span>Service invite link</span>
+              <a href={managedService.serviceLink} target="_blank" rel="noreferrer">
+                Open service link
+              </a>
             </div>
           </div>
         </Modal>

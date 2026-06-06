@@ -9,6 +9,7 @@ function formatExpiry(expiry) {
     return `${expiryDigits.slice(0, 2)}/${expiryDigits.slice(2)}`;
 }
 
+// Get all payment methods for a user
 async function getPaymentMethods(userId) {
     const [rows] = await db.query(
         `
@@ -28,6 +29,7 @@ async function getPaymentMethods(userId) {
     }));
 }
 
+// Save a new payment method for a user
 async function savePaymentMethod(userId, cardHolder, cardNumber, expirationDate) {
     const cardDigits = onlyDigits(cardNumber);
     const expiryDigits = onlyDigits(expirationDate);

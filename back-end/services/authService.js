@@ -15,8 +15,8 @@ async function authUser(username, password) {
     }
 
     return {
-        id: rows[0].u_id,
-        username: rows[0].user_name,
+        u_id: rows[0].u_id,
+        user_name: rows[0].user_name,
         email: rows[0].email,
     };
 }
@@ -43,8 +43,8 @@ async function registerUser(username, email, password) {
         [username, email, password]
     );
     return {
-        id: result.insertId,
-        username,
+        u_id: result.insertId,
+        user_name: username,
         email,
     };
 }

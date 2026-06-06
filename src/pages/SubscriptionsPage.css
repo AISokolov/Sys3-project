@@ -25,6 +25,93 @@
   gap: 18px;
 }
 
+.notifications-menu {
+  position: relative;
+}
+
+.notifications-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2px solid #0077cc;
+  border-radius: 999px;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0, 119, 204, 0.12);
+}
+
+.notifications-button__image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.notifications-button__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #ef476f;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.notifications-menu__panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 20;
+  width: min(360px, 84vw);
+  padding: 18px;
+  border: 1px solid #bfd9f5;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4faff 100%);
+  box-shadow: 0 24px 48px rgba(0, 40, 89, 0.2);
+}
+
+.notifications-menu__panel h3 {
+  margin: 0 0 12px;
+  color: #004d99;
+}
+
+.notifications-menu__panel p {
+  margin: 0;
+  color: #5d7a96;
+}
+
+.notifications-menu__item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #11385f;
+  font-weight: 700;
+}
+
+.notifications-menu__item + .notifications-menu__item {
+  margin-top: 10px;
+}
+
+.notifications-menu__item button {
+  border: 0;
+  background: transparent;
+  color: #ef476f;
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .service-modal__description {
   margin: 0 0 14px;
   color: #44627f;

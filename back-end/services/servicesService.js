@@ -1,5 +1,6 @@
 const db = require('../db/db');
 
+// Get all available subscription services
 async function getAllServices() {
   const [rows] = await db.query(`
     SELECT
@@ -23,6 +24,7 @@ async function getAllServices() {
   }));
 }
 
+// add a new subscription service
 async function addService(name, description, icon, cost) {
   const imageBuffer = icon ? Buffer.from(icon, 'base64') : null;
 

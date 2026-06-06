@@ -180,6 +180,32 @@
   font-size: 1rem;
 }
 
+.profile-modal__link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #ffd28a;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fff7e8 0%, #eff7ff 100%);
+}
+
+.profile-modal__link-card span {
+  color: #8a5a00;
+  font-weight: 900;
+}
+
+.profile-modal__link-card a {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #0077cc;
+  color: #ffffff;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .profile-modal__footer {
   display: flex;
   align-items: center;
@@ -208,6 +234,11 @@
 
   .profile-modal__footer {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-modal__link-card {
+    align-items: flex-start;
     flex-direction: column;
   }
 }

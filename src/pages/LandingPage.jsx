@@ -47,6 +47,10 @@ const features = [
 ];
 
 function LandingPage() {
+  const baseIp = import.meta.env.VITE_BASE_IP;
+  const port = import.meta.env.VITE_BACKEND_PORT;
+  const apiUrl = `http://${baseIp}:${port}`;
+
   const navigate = useNavigate();
   const [optionIndex, setOptionIndex] = useState(0);
   const [activeModal, setActiveModal] = useState(null);
@@ -66,7 +70,7 @@ function LandingPage() {
   useEffect(() => {
     async function loadServices() {
       try {
-        const response = await fetch('http://localhost:3001/services');
+        const response = await fetch(`${apiUrl}/services`);
         if (!response.ok) {
           throw new Error('Failed to fetch services.');
         }
@@ -87,7 +91,7 @@ function LandingPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +123,7 @@ function LandingPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/auth/register', {
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

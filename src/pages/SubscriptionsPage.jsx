@@ -6,21 +6,29 @@ import Modal from '../components/Modal/Modal';
 import ServiceCard from '../components/ServiceCard/ServiceCard';
 import TopButton from '../components/TopButton/TopButton';
 import FormField from '../components/FormField/FormField';
+import notificationBell from '../assets/images/notification_bell.png';
 
 
 function SubscriptionsPage() {
+  const baseIp = import.meta.env.VITE_BASE_IP;
+  const port = import.meta.env.VITE_BACKEND_PORT;
+  const apiUrl = `http://${baseIp}:${port}`;
+
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [groupMode, setGroupMode] = useState('');
   const [groupName, setGroupName] = useState('');
+  const [groupServiceLink, setGroupServiceLink] = useState('');
   const [availableGroups, setAvailableGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [groupMessage, setGroupMessage] = useState('');
   const [groupError, setGroupError] = useState('');
   const [isGroupSaving, setIsGroupSaving] = useState(false);
   const [isGroupsLoading, setIsGroupsLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [formValues, setFormValues] = useState({
     name: '',
     cost: '',
@@ -32,7 +40,7 @@ function SubscriptionsPage() {
   useEffect(() => {
     async function fetchServices() {
       try {
-        const response = await fetch('http://localhost:3001/services');
+        const response = await fetch(`${apiUrl}/services`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch services.');
@@ -47,12 +55,53 @@ function SubscriptionsPage() {
     }
 
     fetchServices();
+    loadNotifications();
   }, []);
+
+  async function loadNotifications() {
+    try {
+      const response = await fetch(`${apiUrl}/notifications`, {
+        credentials: 'include',
+      });
+
+      if (response.status === 401) {
+        navigate('/');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to load notifications.');
+      }
+
+      const data = await response.json();
+      setNotifications(data);
+    } catch (error) {
+      setNotifications([]);
+    }
+  }
+
+  async function deleteNotification(notificationId) {
+    try {
+      const response = await fetch(`${apiUrl}/notifications/${notificationId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete notification.');
+      }
+
+      setNotifications((current) => current.filter((notification) => notification.id !== notificationId));
+    } catch (error) {
+      setGroupError('Could not delete notification.');
+    }
+  }
 
   function closeServiceModal() {
     setSelectedService(null);
     setGroupMode('');
     setGroupName('');
+    setGroupServiceLink('');
     setAvailableGroups([]);
     setSelectedGroupId('');
     setGroupMessage('');
@@ -109,7 +158,7 @@ function SubscriptionsPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/services', {
+      const response = await fetch(`${apiUrl}/services`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,8 +191,8 @@ function SubscriptionsPage() {
   }
 
   async function handleCreateGroup() {
-    if (!selectedService || !groupName.trim()) {
-      setGroupError('Please write a group name.');
+    if (!selectedService || !groupName.trim() || !groupServiceLink.trim()) {
+      setGroupError('Please write a group name and service link.');
       return;
     }
 
@@ -152,14 +201,15 @@ function SubscriptionsPage() {
       setGroupError('');
       setGroupMessage('');
 
-      const response = await fetch('http://localhost:3001/groups', {
+      const response = await fetch(`${apiUrl}/groups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          name: groupName,
+          name: groupName.trim(),
+          serviceLink: groupServiceLink.trim(),
           typeId: selectedService.id,
         }),
       });
@@ -194,7 +244,7 @@ function SubscriptionsPage() {
       setSelectedGroupId('');
       setIsGroupsLoading(true);
 
-      const response = await fetch(`http://localhost:3001/groups/service/${serviceToLoad.id}`, {
+      const response = await fetch(`${apiUrl}/groups/service/${serviceToLoad.id}`, {
         credentials: 'include',
       });
 
@@ -243,9 +293,42 @@ function SubscriptionsPage() {
       <AppHeader
         title="Available Subscriptions"
         actions={
-          <TopButton variant="primary" onClick={() => navigate('/profile')}>
-            My Profile
-          </TopButton>
+          <>
+            <div className="notifications-menu">
+              <button
+                type="button"
+                className="notifications-button"
+                onClick={() => setIsNotificationsOpen((current) => !current)}
+                aria-label="Open notifications"
+              >
+                <img src={notificationBell} alt="" className="notifications-button__image" />
+                {notifications.length > 0 ? (
+                  <span className="notifications-button__count">{notifications.length}</span>
+                ) : null}
+              </button>
+
+              {isNotificationsOpen ? (
+                <div className="notifications-menu__panel">
+                  <h3>Notifications</h3>
+                  {notifications.length === 0 ? (
+                    <p>No reminders right now.</p>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div className="notifications-menu__item" key={notification.id}>
+                        <span>{notification.message}</span>
+                        <button type="button" onClick={() => deleteNotification(notification.id)}>
+                          Delete
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : null}
+            </div>
+            <TopButton variant="primary" onClick={() => navigate('/profile')}>
+              My Profile
+            </TopButton>
+          </>
         }
       />
 
@@ -255,7 +338,7 @@ function SubscriptionsPage() {
             <div>
               <h2 className="page-title">All subscriptions in one place</h2>
             </div>
-            <div className="main-page__badge">{services.length} services visible</div>
+            <div className="main-page__badge">{services.length} services available</div>
           </div>
           {services.length === 0 ? (
             <p className="page-subtitle">No services found.</p>
@@ -318,6 +401,13 @@ function SubscriptionsPage() {
                   value={groupName}
                   onChange={(event) => setGroupName(event.target.value)}
                   placeholder="My subscription group"
+                />
+              </FormField>
+              <FormField label="Service link" hint="Paste the invite or family link for this service.">
+                <input
+                  value={groupServiceLink}
+                  onChange={(event) => setGroupServiceLink(event.target.value)}
+                  placeholder="https://example.com/join-family"
                 />
               </FormField>
               <TopButton variant="primary" onClick={handleCreateGroup} disabled={isGroupSaving}>
